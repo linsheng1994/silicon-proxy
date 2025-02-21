@@ -45,6 +45,13 @@ app.use('/',createProxyMiddleware({
             }));
             return;
         }
+
+        // 如果是流式响应，直接传递数据流
+        if (req.body && req.body.stream === true) {
+            proxyRes.headers['Content-Type'] = 'text/event-stream';
+            proxyRes.headers['Cache-Control'] = 'no-cache';
+            proxyRes.headers['Connection'] = 'keep-alive';
+        }
     },
     onProxyReq: function (proxyReq, req, res) {
         try {
@@ -67,6 +74,9 @@ app.use('/',createProxyMiddleware({
                         body.model = 'Qwen/Qwen2.5-Coder-7B-Instruct';
                     }
                     
+                    // 强制启用流式响应
+                    body.stream = true;
+                    
                     // 写入修改后的请求体
                     const newBodyStr = JSON.stringify(body);
                     proxyReq.setHeader('Content-Length', Buffer.byteLength(newBodyStr));
@@ -81,7 +91,6 @@ app.use('/',createProxyMiddleware({
             }
         } catch (error) {
             console.error('Error in proxy request:', error);
-            // 不在这里直接发送响应，让错误处理中间件处理
             throw error;
         }
     }
