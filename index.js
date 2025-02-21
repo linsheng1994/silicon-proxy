@@ -5,7 +5,7 @@ const app = express()
 const port = process.env.PORT || 9000
 
 // 授权使用的用户列表
-const users = ['wxid1','wxid2','wxid3']
+const users = ['wxid_tcxb05tu7um112','wxid2','wxid3']
 
 app.use('/',createProxyMiddleware({
     target: 'https://api.siliconflow.cn',  // 修改为SiliconFlow的API地址
@@ -30,7 +30,7 @@ app.use('/',createProxyMiddleware({
     },
     onProxyReq: function (proxyReq, req, res) {
         if (users.includes(req.headers['wxid'])) {
-            proxyReq.setHeader('Authorization', 'Bearer 填写你的SiliconFlow_apikey');
+            proxyReq.setHeader('Authorization', `Bearer ${process.env.SILICON_API_KEY}`);
             // 添加默认model参数（如果请求中没有）
             const bodyStr = req.body ? JSON.stringify(req.body) : '{}';
             const body = JSON.parse(bodyStr);
