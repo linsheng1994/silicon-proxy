@@ -46,11 +46,12 @@ app.use('/',createProxyMiddleware({
             return;
         }
 
-        // 如果是流式响应，直接传递数据流
+        // 处理流式响应
         if (req.body && req.body.stream === true) {
             proxyRes.headers['Content-Type'] = 'text/event-stream';
             proxyRes.headers['Cache-Control'] = 'no-cache';
             proxyRes.headers['Connection'] = 'keep-alive';
+            proxyRes.headers['X-Accel-Buffering'] = 'no';  // 禁用Nginx缓冲
         }
     },
     onProxyReq: function (proxyReq, req, res) {
@@ -69,13 +70,19 @@ app.use('/',createProxyMiddleware({
                     const bodyStr = JSON.stringify(req.body);
                     const body = JSON.parse(bodyStr);
                     
-                    // 设置默认模型
+                    // 设置默认模型和参数
                     if (!body.model) {
-                        body.model = 'Qwen/Qwen2.5-Coder-7B-Instruct';
+                        body.model = 'deepseek-ai/DeepSeek-V3';  // 使用文档默认模型
                     }
-                    
-                    // 强制启用流式响应
-                    body.stream = true;
+                    if (!body.temperature) {
+                        body.temperature = 0.7;  // 默认temperature
+                    }
+                    if (!body.top_p) {
+                        body.top_p = 0.7;  // 默认top_p
+                    }
+                    if (!body.max_tokens) {
+                        body.max_tokens = 512;  // 默认max_tokens
+                    }
                     
                     // 写入修改后的请求体
                     const newBodyStr = JSON.stringify(body);
