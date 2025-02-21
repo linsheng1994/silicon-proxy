@@ -25,6 +25,9 @@ app.use('/',createProxyMiddleware({
     pathRewrite: {
         '^/v1/chat/completions': '/chat/completions',
     },
+    // 添加超时配置
+    proxyTimeout: 50000,
+    timeout: 50000,
     onProxyRes: function (proxyRes, req, res) {
         proxyRes.headers['Access-Control-Allow-Origin'] = '*';
         if (users.includes(req.headers['wxid'])) {
