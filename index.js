@@ -29,14 +29,21 @@ app.use('/',createProxyMiddleware({
     proxyTimeout: 50000,
     timeout: 50000,
     onProxyRes: function (proxyRes, req, res) {
+        // 先设置CORS头
         proxyRes.headers['Access-Control-Allow-Origin'] = '*';
-        if (users.includes(req.headers['wxid'])) {
-            // 正常返回响应
-        }else{
-            res.status(401).json({
+        
+        // 检查授权
+        if (!users.includes(req.headers['wxid'])) {
+            // 在发送任何数据之前终止请求
+            res.writeHead(401, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            });
+            res.end(JSON.stringify({
                 'error': 'Unauthorized',
                 'message': '未授权的访问'
-            });
+            }));
+            return;
         }
     },
     onProxyReq: function (proxyReq, req, res) {
@@ -57,7 +64,7 @@ app.use('/',createProxyMiddleware({
                     
                     // 设置默认模型
                     if (!body.model) {
-                        body.model = 'deepseek-ai/DeepSeek-V3';
+                        body.model = 'Qwen/Qwen2.5-Coder-7B-Instruct';
                     }
                     
                     // 写入修改后的请求体
@@ -74,10 +81,8 @@ app.use('/',createProxyMiddleware({
             }
         } catch (error) {
             console.error('Error in proxy request:', error);
-            res.status(500).json({
-                error: 'Proxy Error',
-                message: error.message
-            });
+            // 不在这里直接发送响应，让错误处理中间件处理
+            throw error;
         }
     }
 }));
